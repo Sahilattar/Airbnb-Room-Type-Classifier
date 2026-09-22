@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
-
+ 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -44,10 +44,12 @@ def greet():
 
 @app.post('/predict')
 def predict(features: Features):
-    row = pd.DataFrame([features.dict()], columns=COLUMNS)
-    prediction  = model.predict(row)
+    row = pd.DataFrame([features.model_dump()], columns=COLUMNS)
+
+    prediction = model.predict(row)
     probability = model.predict_proba(row)
 
     return {
         "Predicted_room_type": prediction[0],
-        "Probability": probability.tolist()[0]}
+        "Probability": probability.tolist()[0]
+    }

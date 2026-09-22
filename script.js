@@ -1,302 +1,288 @@
-// ============================================================
-// CONFIG
-// ============================================================
-// Point this at wherever your FastAPI app is running.
-const API_BASE_URL = "https://nyc-airbnb-room-type-predictor.onrender.com";
-const PREDICT_ENDPOINT = `${API_BASE_URL}/predict`;
-const HEALTH_ENDPOINT = `${API_BASE_URL}/`;
+const BOROUGHS = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"];
 
-const REDUCE_MOTION = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+const NEIGHBOURHOODS = ["Allerton", "Arden Heights", "Arrochar", "Arverne", "Astoria", "Bath Beach", "Battery Park City", "Bay Ridge", "Bay Terrace", "Bay Terrace, Staten Island", "Baychester", "Bayside", "Bayswater", "Bedford-Stuyvesant", "Belle Harbor", "Bellerose", "Belmont", "Bensonhurst", "Bergen Beach", "Boerum Hill", "Borough Park", "Breezy Point", "Briarwood", "Brighton Beach", "Bronxdale", "Brooklyn Heights", "Brownsville", "Bull's Head", "Bushwick", "Cambria Heights", "Canarsie", "Carroll Gardens", "Castle Hill", "Castleton Corners", "Chelsea", "Chinatown", "City Island", "Civic Center", "Claremont Village", "Clason Point", "Clifton", "Clinton Hill", "Co-op City", "Cobble Hill", "College Point", "Columbia St", "Concord", "Concourse", "Concourse Village", "Coney Island", "Corona", "Crown Heights", "Cypress Hills", "DUMBO", "Ditmars Steinway", "Dongan Hills", "Douglaston", "Downtown Brooklyn", "Dyker Heights", "East Elmhurst", "East Flatbush", "East Harlem", "East Morrisania", "East New York", "East Village", "Eastchester", "Edenwald", "Edgemere", "Elmhurst", "Eltingville", "Emerson Hill", "Far Rockaway", "Fieldston", "Financial District", "Flatbush", "Flatiron District", "Flatlands", "Flushing", "Fordham", "Forest Hills", "Fort Greene", "Fort Hamilton", "Fresh Meadows", "Glendale", "Gowanus", "Gramercy", "Graniteville", "Grant City", "Gravesend", "Great Kills", "Greenpoint", "Greenwich Village", "Grymes Hill", "Harlem", "Hell's Kitchen", "Highbridge", "Hollis", "Holliswood", "Howard Beach", "Howland Hook", "Huguenot", "Hunts Point", "Inwood", "Jackson Heights", "Jamaica", "Jamaica Estates", "Jamaica Hills", "Kensington", "Kew Gardens", "Kew Gardens Hills", "Kingsbridge", "Kips Bay", "Laurelton", "Little Italy", "Little Neck", "Long Island City", "Longwood", "Lower East Side", "Manhattan Beach", "Marble Hill", "Mariners Harbor", "Maspeth", "Melrose", "Middle Village", "Midland Beach", "Midtown", "Midwood", "Mill Basin", "Morningside Heights", "Morris Heights", "Morris Park", "Morrisania", "Mott Haven", "Mount Eden", "Mount Hope", "Murray Hill", "Navy Yard", "Neponsit", "New Brighton", "New Dorp", "New Dorp Beach", "New Springville", "NoHo", "Nolita", "North Riverdale", "Norwood", "Oakwood", "Olinville", "Ozone Park", "Park Slope", "Parkchester", "Pelham Bay", "Pelham Gardens", "Port Morris", "Port Richmond", "Prince's Bay", "Prospect Heights", "Prospect-Lefferts Gardens", "Queens Village", "Randall Manor", "Red Hook", "Rego Park", "Richmond Hill", "Ridgewood", "Riverdale", "Rockaway Beach", "Roosevelt Island", "Rosebank", "Rosedale", "Rossville", "Schuylerville", "Sea Gate", "Sheepshead Bay", "Shore Acres", "Silver Lake", "SoHo", "Soundview", "South Beach", "South Ozone Park", "South Slope", "Springfield Gardens", "Spuyten Duyvil", "St. Albans", "St. George", "Stapleton", "Stuyvesant Town", "Sunnyside", "Sunset Park", "Theater District", "Throgs Neck", "Todt Hill", "Tompkinsville", "Tottenville", "Tremont", "Tribeca", "Two Bridges", "Unionport", "University Heights", "Upper East Side", "Upper West Side", "Van Nest", "Vinegar Hill", "Wakefield", "Washington Heights", "West Brighton", "West Farms", "West Village", "Westchester Square", "Westerleigh", "Whitestone", "Williamsbridge", "Williamsburg", "Willowbrook", "Windsor Terrace", "Woodhaven", "Woodlawn", "Woodside"];
+/* ============================================================
+   App logic — form handling, validation, API call, rendering
+   ============================================================ */
 
-// Room type classes the model returns, and the visual weight of the
-// building we draw for each one (window grid + max height).
-const ROOM_CLASSES = [
-  { key: "Entire home/apt", label: "Entire home/apt", rows: 6, cols: 2, height: "100%" },
-  { key: "Private room", label: "Private room", rows: 4, cols: 2, height: "68%" },
-  { key: "Shared room", label: "Shared room", rows: 2, cols: 2, height: "42%" },
-];
+const FIELD_SPECS = {
+  latitude:                        { type: "float", min: -90,  max: 90,  label: "Latitude" },
+  longitude:                       { type: "float", min: -180, max: 180, label: "Longitude" },
+  price:                           { type: "float", min: 0,    exclusiveMin: true, label: "Price" },
+  minimum_nights:                  { type: "int",   min: 1,    max: 365, label: "Minimum nights" },
+  number_of_reviews:               { type: "int",   min: 0,    label: "Number of reviews" },
+  reviews_per_month:               { type: "float", min: 0,    label: "Reviews per month" },
+  calculated_host_listings_count:  { type: "int",   min: 0,    label: "Host's total listings" },
+  availability_365:                { type: "int",   min: 0,    max: 365, label: "Availability" },
+  neighbourhood_group:             { type: "str",   label: "Borough" },
+  neighbourhood:                   { type: "str",   label: "Neighbourhood" },
+};
 
-// A few realistic example listings so people can explore without typing.
-const EXAMPLES = [
-  {
-    latitude: 40.7484, longitude: -73.9857, price: 120, minimum_nights: 2,
-    number_of_reviews: 84, reviews_per_month: 2.3, calculated_host_listings_count: 1,
-    availability_365: 210, neighbourhood_group: "Manhattan", neighbourhood: "Midtown",
-  },
-  {
-    latitude: 40.6782, longitude: -73.9442, price: 55, minimum_nights: 1,
-    number_of_reviews: 210, reviews_per_month: 4.1, calculated_host_listings_count: 3,
-    availability_365: 300, neighbourhood_group: "Brooklyn", neighbourhood: "Bedford-Stuyvesant",
-  },
-  {
-    latitude: 40.7282, longitude: -73.7949, price: 38, minimum_nights: 3,
-    number_of_reviews: 12, reviews_per_month: 0.6, calculated_host_listings_count: 1,
-    availability_365: 90, neighbourhood_group: "Queens", neighbourhood: "Flushing",
-  },
-];
-let exampleIndex = 0;
+const LINE_COLORS = {
+  "Entire home/apt": "var(--line-green)",
+  "Private room": "var(--line-blue)",
+  "Shared room": "var(--line-orange)",
+};
 
-// ============================================================
-// AMBIENT SKYLINE WINDOW TWINKLE
-// ============================================================
-function buildSkylineLights() {
-  const container = document.getElementById("skylineBg");
-  if (!container || REDUCE_MOTION) return;
+const DEFAULT_API_BASE = "http://127.0.0.1:8000";
+const API_BASE_KEY = "nyc-classifier:apiBase";
 
-  const count = 42;
-  for (let i = 0; i < count; i++) {
-    const light = document.createElement("div");
-    light.className = "window-light";
-    const size = Math.random() < 0.5 ? 2 : 3;
-    light.style.width = `${size}px`;
-    light.style.height = `${size}px`;
-    light.style.left = `${Math.random() * 100}%`;
-    light.style.bottom = `${8 + Math.random() * 32}vh`;
-    light.style.animationDelay = `${Math.random() * 5}s`;
-    light.style.animationDuration = `${3.5 + Math.random() * 3}s`;
-    container.appendChild(light);
-  }
+function getApiBase() {
+  return (localStorage.getItem(API_BASE_KEY) || DEFAULT_API_BASE).replace(/\/+$/, "");
 }
 
-// ============================================================
-// FORM WIRING
-// ============================================================
-const form = document.getElementById("predictForm");
-const predictBtn = document.getElementById("predictBtn");
-const formError = document.getElementById("formError");
-const availabilityInput = document.getElementById("availability_365");
-const availabilityValue = document.getElementById("availabilityValue");
-const exampleBtn = document.getElementById("exampleBtn");
+function setApiBase(value) {
+  const clean = value.trim().replace(/\/+$/, "");
+  localStorage.setItem(API_BASE_KEY, clean || DEFAULT_API_BASE);
+  return getApiBase();
+}
 
-availabilityInput.addEventListener("input", () => {
-  availabilityValue.textContent = availabilityInput.value;
-});
-
-exampleBtn.addEventListener("click", () => {
-  const data = EXAMPLES[exampleIndex % EXAMPLES.length];
-  exampleIndex++;
-  Object.entries(data).forEach(([key, value]) => {
-    const el = form.elements[key];
-    if (el) el.value = value;
+/* ---------- populate boroughs & neighbourhood datalist ---------- */
+function populateStaticOptions() {
+  const boroughSelect = document.getElementById("neighbourhood_group");
+  BOROUGHS.forEach((b) => {
+    const opt = document.createElement("option");
+    opt.value = b;
+    opt.textContent = b;
+    boroughSelect.appendChild(opt);
   });
-  availabilityValue.textContent = data.availability_365;
-  formError.textContent = "";
-});
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  formError.textContent = "";
+  const datalist = document.getElementById("neighbourhoodList");
+  NEIGHBOURHOODS.forEach((n) => {
+    const opt = document.createElement("option");
+    opt.value = n;
+    datalist.appendChild(opt);
+  });
+}
 
-  if (!form.reportValidity()) return;
+/* ---------- validation ---------- */
+function clearFieldError(name) {
+  const field = document.getElementById(name)?.closest(".field");
+  const errEl = document.querySelector(`[data-error-for="${name}"]`);
+  if (field) field.classList.remove("has-error");
+  if (errEl) errEl.textContent = "";
+}
 
-  const payload = collectPayload();
-  setLoading(true);
+function setFieldError(name, message) {
+  const field = document.getElementById(name)?.closest(".field");
+  const errEl = document.querySelector(`[data-error-for="${name}"]`);
+  if (field) field.classList.add("has-error");
+  if (errEl) errEl.textContent = message;
+}
+
+function validateAndCollect(form) {
+  const payload = {};
+  let firstInvalid = null;
+
+  for (const [name, spec] of Object.entries(FIELD_SPECS)) {
+    clearFieldError(name);
+    const el = document.getElementById(name);
+    const raw = el.value.trim();
+
+    if (raw === "") {
+      setFieldError(name, `${spec.label} is required.`);
+      firstInvalid = firstInvalid || el;
+      continue;
+    }
+
+    if (spec.type === "str") {
+      if (spec.label === "Neighbourhood" && !NEIGHBOURHOODS.includes(raw)) {
+        setFieldError(name, "Pick a neighbourhood from the suggestions.");
+        firstInvalid = firstInvalid || el;
+        continue;
+      }
+      payload[name] = raw;
+      continue;
+    }
+
+    const num = Number(raw);
+    if (Number.isNaN(num)) {
+      setFieldError(name, `${spec.label} must be a number.`);
+      firstInvalid = firstInvalid || el;
+      continue;
+    }
+    if (spec.type === "int" && !Number.isInteger(num)) {
+      setFieldError(name, `${spec.label} must be a whole number.`);
+      firstInvalid = firstInvalid || el;
+      continue;
+    }
+    if (spec.exclusiveMin && num <= spec.min) {
+      setFieldError(name, `${spec.label} must be greater than ${spec.min}.`);
+      firstInvalid = firstInvalid || el;
+      continue;
+    }
+    if (spec.min !== undefined && num < spec.min) {
+      setFieldError(name, `${spec.label} must be at least ${spec.min}.`);
+      firstInvalid = firstInvalid || el;
+      continue;
+    }
+    if (spec.max !== undefined && num > spec.max) {
+      setFieldError(name, `${spec.label} must be at most ${spec.max}.`);
+      firstInvalid = firstInvalid || el;
+      continue;
+    }
+    payload[name] = num;
+  }
+
+  return { payload, firstInvalid, isValid: !firstInvalid };
+}
+
+/* ---------- result rendering ---------- */
+function showIdle() {
+  document.getElementById("signIdle").hidden = false;
+  document.getElementById("signError").hidden = true;
+  document.getElementById("signResult").hidden = true;
+}
+
+function showError(message) {
+  document.getElementById("signIdle").hidden = true;
+  document.getElementById("signError").hidden = false;
+  document.getElementById("signResult").hidden = true;
+  document.getElementById("signErrorText").textContent = message;
+}
+
+function showResult(predictedLabel, probabilities) {
+  document.getElementById("signIdle").hidden = true;
+  document.getElementById("signError").hidden = true;
+  document.getElementById("signResult").hidden = false;
+
+  const color = LINE_COLORS[predictedLabel] || "var(--ink)";
+  const bullet = document.getElementById("resultBullet");
+  bullet.style.setProperty("--line-color", color);
+  document.getElementById("resultLabel").textContent = predictedLabel;
+
+  const probsEl = document.getElementById("probs");
+  probsEl.innerHTML = "";
+
+  const classes = Object.keys(LINE_COLORS);
+  const rows = classes.map((label, i) => ({
+    label,
+    value: Array.isArray(probabilities) ? (probabilities[i] ?? 0) : 0,
+  })).sort((a, b) => b.value - a.value);
+
+  rows.forEach((row) => {
+    const wrap = document.createElement("div");
+    wrap.className = "prob-row";
+
+    const top = document.createElement("div");
+    top.className = "prob-row__top";
+    top.innerHTML = `<span class="prob-row__name">${row.label}</span><span class="prob-row__pct">${(row.value * 100).toFixed(1)}%</span>`;
+
+    const track = document.createElement("div");
+    track.className = "prob-row__track";
+    const fill = document.createElement("div");
+    fill.className = "prob-row__fill";
+    fill.style.setProperty("--line-color", LINE_COLORS[row.label] || "var(--ink)");
+    fill.style.width = "0%";
+    track.appendChild(fill);
+
+    wrap.appendChild(top);
+    wrap.appendChild(track);
+    probsEl.appendChild(wrap);
+
+    requestAnimationFrame(() => {
+      fill.style.width = `${Math.max(0, Math.min(100, row.value * 100))}%`;
+    });
+  });
+}
+
+/* ---------- submit handling ---------- */
+async function handleSubmit(event) {
+  event.preventDefault();
+
+  const form = event.target;
+  const statusEl = document.getElementById("formStatus");
+  const submitBtn = document.getElementById("submitBtn");
+  statusEl.textContent = "";
+
+  const { payload, firstInvalid, isValid } = validateAndCollect(form);
+
+  if (!isValid) {
+    statusEl.textContent = "Please fix the highlighted fields.";
+    firstInvalid.focus();
+    return;
+  }
+
+  submitBtn.disabled = true;
+  submitBtn.classList.add("is-loading");
+
+  const apiBase = getApiBase();
 
   try {
-    const res = await fetch(PREDICT_ENDPOINT, {
+    const response = await fetch(`${apiBase}/predict`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
-    if (!res.ok) {
-      const body = await res.json().catch(() => null);
-      throw new Error(body?.detail ? formatDetail(body.detail) : `Request failed (${res.status}).`);
-    }
-
-    const result = await res.json();
-    renderResult(result);
-  } catch (err) {
-    formError.textContent = err.message?.includes("fetch")
-      ? "Can't reach the prediction API. Make sure the FastAPI server is running and reachable."
-      : err.message || "Something went wrong. Check the values and try again.";
-  } finally {
-    setLoading(false);
-  }
-});
-
-function collectPayload() {
-  const fd = new FormData(form);
-  return {
-    latitude: parseFloat(fd.get("latitude")),
-    longitude: parseFloat(fd.get("longitude")),
-    price: parseFloat(fd.get("price")),
-    minimum_nights: parseInt(fd.get("minimum_nights"), 10),
-    number_of_reviews: parseInt(fd.get("number_of_reviews"), 10),
-    reviews_per_month: parseFloat(fd.get("reviews_per_month")),
-    calculated_host_listings_count: parseInt(fd.get("calculated_host_listings_count"), 10),
-    availability_365: parseInt(fd.get("availability_365"), 10),
-    neighbourhood_group: fd.get("neighbourhood_group"),
-    neighbourhood: fd.get("neighbourhood"),
-  };
-}
-
-function formatDetail(detail) {
-  if (Array.isArray(detail)) {
-    return detail.map((d) => d.msg || JSON.stringify(d)).join(" ");
-  }
-  return String(detail);
-}
-
-function setLoading(isLoading) {
-  predictBtn.disabled = isLoading;
-  predictBtn.classList.toggle("loading", isLoading);
-}
-
-// ============================================================
-// RESULT RENDERING
-// ============================================================
-const resultEmpty = document.getElementById("resultEmpty");
-const resultContent = document.getElementById("resultContent");
-const predictedName = document.getElementById("predictedName");
-const buildingsRow = document.getElementById("buildingsRow");
-const probList = document.getElementById("probList");
-
-function renderResult(result) {
-  const predicted = result.Predicted_room_type;
-  const probs = result.Probability; // array aligned to model.classes_ order
-
-  // Pair each class with its probability. We trust ROOM_CLASSES order
-  // matches sklearn's alphabetical classes_ output; fall back gracefully
-  // if lengths mismatch.
-  const paired = ROOM_CLASSES.map((cls, i) => ({
-    ...cls,
-    prob: typeof probs?.[i] === "number" ? probs[i] : 0,
-  }));
-
-  resultEmpty.hidden = true;
-  resultContent.hidden = false;
-
-  predictedName.textContent = predicted;
-
-  buildBuildings(paired, predicted);
-  buildProbList(paired, predicted);
-}
-
-function buildBuildings(paired, predicted) {
-  buildingsRow.innerHTML = "";
-
-  paired.forEach((cls) => {
-    const col = document.createElement("div");
-    col.className = "building-col";
-
-    const b = document.createElement("div");
-    b.className = "building";
-    b.style.setProperty("--h", "18%");
-
-    const totalWindows = cls.rows * cls.cols;
-    const litCount = Math.round(totalWindows * cls.prob);
-
-    for (let i = 0; i < totalWindows; i++) {
-      const win = document.createElement("div");
-      win.className = "win";
-      b.appendChild(win);
-    }
-
-    const caption = document.createElement("div");
-    caption.className = "building-caption";
-    caption.textContent = cls.label;
-
-    col.appendChild(b);
-    col.appendChild(caption);
-    buildingsRow.appendChild(col);
-
-    // Animate height + lit windows after insertion, staggered per building.
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        b.style.setProperty("--h", cls.height);
-        const wins = b.querySelectorAll(".win");
-        wins.forEach((w, i) => {
-          if (i < litCount) {
-            setTimeout(() => w.classList.add("lit"), REDUCE_MOTION ? 0 : 60 * i + 300);
-          }
-        });
-        if (cls.key === predicted) {
-          b.style.boxShadow = "0 0 22px -4px var(--amber-glow)";
+    if (!response.ok) {
+      let detail = `Request failed with status ${response.status}.`;
+      try {
+        const errBody = await response.json();
+        if (errBody?.detail) {
+          detail = typeof errBody.detail === "string"
+            ? errBody.detail
+            : JSON.stringify(errBody.detail);
         }
-      }, REDUCE_MOTION ? 0 : 80);
-    });
-  });
-}
-
-function buildProbList(paired, predicted) {
-  probList.innerHTML = "";
-  const sorted = [...paired].sort((a, b) => b.prob - a.prob);
-
-  sorted.forEach((cls) => {
-    const row = document.createElement("div");
-    row.className = "prob-row" + (cls.key === predicted ? " top" : "");
-
-    const name = document.createElement("span");
-    name.className = "name";
-    name.textContent = cls.label;
-
-    const value = document.createElement("span");
-    value.className = "value";
-    value.textContent = "0%";
-
-    const track = document.createElement("div");
-    track.className = "prob-track";
-    const fill = document.createElement("div");
-    fill.className = "prob-fill";
-    track.appendChild(fill);
-
-    row.appendChild(name);
-    row.appendChild(value);
-    row.appendChild(track);
-    probList.appendChild(row);
-
-    const pct = Math.round(cls.prob * 100);
-    requestAnimationFrame(() => {
-      setTimeout(() => {
-        fill.style.width = `${pct}%`;
-        animateCount(value, pct);
-      }, REDUCE_MOTION ? 0 : 150);
-    });
-  });
-}
-
-function animateCount(el, target) {
-  if (REDUCE_MOTION) {
-    el.textContent = `${target}%`;
-    return;
-  }
-  const duration = 700;
-  const start = performance.now();
-  function tick(now) {
-    const t = Math.min(1, (now - start) / duration);
-    const eased = 1 - Math.pow(1 - t, 3);
-    el.textContent = `${Math.round(target * eased)}%`;
-    if (t < 1) requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
-}
-
-// ============================================================
-// API HEALTH CHECK
-// ============================================================
-async function checkApiStatus() {
-  const statusEl = document.getElementById("apiStatus");
-  try {
-    const res = await fetch(HEALTH_ENDPOINT, { method: "GET" });
-    if (res.ok) {
-      statusEl.classList.add("online");
-      statusEl.classList.remove("offline");
-      statusEl.lastChild.textContent = "API connected";
-    } else {
-      throw new Error("bad status");
+      } catch (_) { /* ignore parse errors, keep default message */ }
+      throw new Error(detail);
     }
-  } catch {
-    statusEl.classList.add("offline");
-    statusEl.classList.remove("online");
-    statusEl.lastChild.textContent = "API unreachable";
+
+    const data = await response.json();
+    showResult(data.Predicted_room_type, data.Probability);
+  } catch (err) {
+    const message = err instanceof TypeError
+      ? `Couldn't reach the API at ${apiBase}. Check it's running and the URL is correct (see the API button, top right).`
+      : err.message || "Something went wrong while getting a prediction.";
+    showError(message);
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.classList.remove("is-loading");
   }
 }
 
-// ============================================================
-// INIT
-// ============================================================
-document.addEventListener("DOMContentLoaded", () => {
-  buildSkylineLights();
-  checkApiStatus();
-});
+function handleReset() {
+  document.getElementById("predictForm").reset();
+  Object.keys(FIELD_SPECS).forEach(clearFieldError);
+  document.getElementById("formStatus").textContent = "";
+  showIdle();
+}
+
+/* ---------- settings panel ---------- */
+function initSettingsPanel() {
+  const toggle = document.getElementById("settingsToggle");
+  const panel = document.getElementById("settingsPanel");
+  const input = document.getElementById("apiBase");
+  const saveBtn = document.getElementById("apiBaseSave");
+
+  input.value = getApiBase();
+
+  toggle.addEventListener("click", () => {
+    const isHidden = panel.hidden;
+    panel.hidden = !isHidden;
+    toggle.setAttribute("aria-expanded", String(isHidden));
+  });
+
+  saveBtn.addEventListener("click", () => {
+    const updated = setApiBase(input.value || DEFAULT_API_BASE);
+    input.value = updated;
+    const statusEl = document.getElementById("formStatus");
+    statusEl.style.color = "var(--line-green)";
+    statusEl.textContent = `API URL saved: ${updated}`;
+    setTimeout(() => {
+      statusEl.textContent = "";
+      statusEl.style.color = "";
+    }, 2500);
+  });
+}
+
+/* ---------- init ---------- */
+function init() {
+  populateStaticOptions();
+  initSettingsPanel();
+  document.getElementById("predictForm").addEventListener("submit", handleSubmit);
+  document.getElementById("resetBtn").addEventListener("click", handleReset);
+  showIdle();
+}
+
+document.addEventListener("DOMContentLoaded", init);
