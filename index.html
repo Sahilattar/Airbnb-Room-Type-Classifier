@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Airbnb Room Type Classifier</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Clean Top Header -->
+  <header class="navbar">
+    <div class="nav-container">
+      <div class="logo">
+        <span class="logo-icon">🏠</span>
+        <div class="logo-text">
+          <h1>Airbnb Classifier</h1>
+          <span>ML Room Type Prediction</span>
+        </div>
+      </div>
+      <div id="api-status-badge" class="status-badge checking">Checking API...</div>
+    </div>
+  </header>
+
+  <div class="app-container">
+
+    <!-- Preset Quick-Fill Bar -->
+    <div class="presets-bar">
+      <span class="presets-label">Quick Presets:</span>
+      <button type="button" class="preset-btn" data-preset="entire">Entire Home ($320)</button>
+      <button type="button" class="preset-btn" data-preset="private">Private Room ($85)</button>
+      <button type="button" class="preset-btn" data-preset="shared">Shared Room ($35)</button>
+    </div>
+
+    <!-- Error / Status Box -->
+    <div id="error-box" class="error-box" style="display: none;"></div>
+
+    <!-- Main 2-Column Card Grid -->
+    <div class="main-grid">
+
+      <!-- Left: Listing Features Input Form -->
+      <section class="card form-card">
+        <div class="card-header">
+          <h2>Listing Features</h2>
+          <p>Provide property specifications to predict room category.</p>
+        </div>
+
+        <form id="prediction-form">
+
+          <!-- Location Section -->
+          <div class="fieldset">
+            <h3 class="fieldset-title">Location</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="neighbourhood_group">Borough</label>
+                <select id="neighbourhood_group" required>
+                  <option value="Manhattan">Manhattan</option>
+                  <option value="Brooklyn">Brooklyn</option>
+                  <option value="Queens">Queens</option>
+                  <option value="Bronx">Bronx</option>
+                  <option value="Staten Island">Staten Island</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="neighbourhood">Neighbourhood</label>
+                <input type="text" id="neighbourhood" value="Midtown" required placeholder="e.g. Midtown">
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="latitude">Latitude</label>
+                <input type="number" id="latitude" step="any" value="40.7589" required>
+              </div>
+
+              <div class="form-group">
+                <label for="longitude">Longitude</label>
+                <input type="number" id="longitude" step="any" value="-73.9851" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pricing & Booking Section -->
+          <div class="fieldset">
+            <h3 class="fieldset-title">Pricing & Booking</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="price">Price ($/night)</label>
+                <input type="number" id="price" min="1" step="any" value="320" required>
+              </div>
+
+              <div class="form-group">
+                <label for="minimum_nights">Minimum Nights</label>
+                <input type="number" id="minimum_nights" min="1" max="365" value="3" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Host & Reviews Section -->
+          <div class="fieldset">
+            <h3 class="fieldset-title">Host & Activity</h3>
+            <div class="form-row">
+              <div class="form-group">
+                <label for="number_of_reviews">Total Reviews</label>
+                <input type="number" id="number_of_reviews" min="0" value="45" required>
+              </div>
+
+              <div class="form-group">
+                <label for="reviews_per_month">Reviews / Month</label>
+                <input type="number" id="reviews_per_month" min="0" step="any" value="1.8" required>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="calculated_host_listings_count">Host Listings Count</label>
+                <input type="number" id="calculated_host_listings_count" min="0" value="1" required>
+              </div>
+
+              <div class="form-group">
+                <label for="availability_365">Availability (365 Days)</label>
+                <input type="number" id="availability_365" min="0" max="365" value="210" required>
+              </div>
+            </div>
+          </div>
+
+          <button type="submit" id="predict-btn" class="btn-primary">Predict Room Type</button>
+        </form>
+      </section>
+
+      <!-- Right: Clean Prediction Results -->
+      <section class="card result-container">
+        
+        <!-- Empty Placeholder -->
+        <div id="empty-state" class="empty-state">
+          <div class="empty-icon">📊</div>
+          <h3>Awaiting Prediction</h3>
+          <p>Fill out the form or choose a preset on the left, then click <strong>Predict Room Type</strong>.</p>
+        </div>
+
+        <!-- Result View -->
+        <div id="result-card" class="result-card" style="display: none;">
+          <div class="card-header">
+            <h2>Prediction Result</h2>
+            <p>Classified using Scikit-Learn Model Pipeline.</p>
+          </div>
+
+          <!-- Hero Display -->
+          <div class="hero-result">
+            <div id="res-icon" class="hero-icon">🏠</div>
+            <div class="hero-text">
+              <span class="result-tag">Classified Room Type</span>
+              <h3 id="res-title">Entire home/apt</h3>
+              <p id="res-desc">Guests have the entire space to themselves.</p>
+            </div>
+          </div>
+
+          <!-- Probability Distribution Bars -->
+          <div class="probabilities-container">
+            <h4 class="prob-title">Confidence Breakdown</h4>
+
+            <!-- Entire home/apt -->
+            <div id="row-entire" class="prob-row">
+              <div class="prob-label">
+                <span>🏠 Entire home/apt</span>
+                <strong id="pct-entire">0.0%</strong>
+              </div>
+              <div class="progress-track">
+                <div id="bar-entire" class="progress-fill entire"></div>
+              </div>
+            </div>
+
+            <!-- Private room -->
+            <div id="row-private" class="prob-row">
+              <div class="prob-label">
+                <span>🚪 Private room</span>
+                <strong id="pct-private">0.0%</strong>
+              </div>
+              <div class="progress-track">
+                <div id="bar-private" class="progress-fill private"></div>
+              </div>
+            </div>
+
+            <!-- Shared room -->
+            <div id="row-shared" class="prob-row">
+              <div class="prob-label">
+                <span>🛏️ Shared room</span>
+                <strong id="pct-shared">0.0%</strong>
+              </div>
+              <div class="progress-track">
+                <div id="bar-shared" class="progress-fill shared"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>Airbnb Room Type Classifier &bull; Powered by FastAPI & Scikit-Learn</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
