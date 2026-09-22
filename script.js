@@ -251,9 +251,9 @@ const NEIGHBOURHOODS_BY_GROUP = {
 // ============================================================
 
 const LINE_COLORS = {
-    "Entire home/apt": "--color-entire",
-    "Private room": "--color-private",
-    "Shared room": "--color-shared"
+    "Entire home/apt": "--accent",
+    "Private room": "--manhattan",
+    "Shared room": "--queens"
 };
 
 
@@ -324,7 +324,7 @@ function populateStaticOptions() {
         document.getElementById("neighbourhood_group");
 
     const neighbourhoodList =
-        document.getElementById("neighbourhood-list");
+        document.getElementById("neighbourhoodList");
 
     if (boroughSelect) {
         boroughSelect.innerHTML =
@@ -444,7 +444,7 @@ function validateAndCollect(form) {
 
 function showIdle() {
     const result = document.getElementById("result");
-    const error = document.getElementById("error");
+    const error = document.getElementById("formError");
 
     if (result) {
         result.hidden = true;
@@ -457,7 +457,7 @@ function showIdle() {
 
 
 function showError(message) {
-    const error = document.getElementById("error");
+    const error = document.getElementById("formError");
 
     if (!error) return;
 
@@ -474,26 +474,19 @@ function showResult(roomType, probabilities) {
     result.hidden = false;
 
     const predictedRoom =
-        document.getElementById("predicted-room-type");
-
-    const probability =
-        document.getElementById("prediction-probability");
+        document.getElementById("resultType");
 
     if (predictedRoom) {
-        predictedRoom.textContent = roomType;
-    }
-
-    if (probability) {
         const maxProbability = Math.max(
             ...probabilities.map(Number)
         );
 
-        probability.textContent =
-            `${(maxProbability * 100).toFixed(2)}%`;
+        predictedRoom.textContent =
+            `${roomType} (${(maxProbability * 100).toFixed(2)}%)`;
     }
 
     const probabilityList =
-        document.getElementById("probability-list");
+        document.getElementById("probBars");
 
     if (!probabilityList) return;
 
@@ -506,23 +499,22 @@ function showResult(roomType, probabilities) {
 
         const row = document.createElement("div");
 
-        row.className = "probability-row";
+        row.className = "prob-row";
 
         row.innerHTML = `
-            <div class="probability-label">
-                <span>${roomTypeName}</span>
-                <span>${(value * 100).toFixed(2)}%</span>
-            </div>
+            <span>${roomTypeName}</span>
 
-            <div class="probability-bar">
+            <div class="prob-track">
                 <div
-                    class="probability-fill"
+                    class="prob-fill"
                     style="
                         width: ${value * 100}%;
                         background: var(${LINE_COLORS[roomTypeName]});
                     "
                 ></div>
             </div>
+
+            <span class="prob-pct">${(value * 100).toFixed(2)}%</span>
         `;
 
         probabilityList.appendChild(row);
@@ -686,14 +678,14 @@ function initSettingsPanel() {
 function init() {
     populateStaticOptions();
 
-    const form = document.getElementById("prediction-form");
+    const form = document.getElementById("predictForm");
 
     if (form) {
         form.addEventListener("submit", handleSubmit);
     }
 
     const resetButton =
-        document.getElementById("reset-button");
+        document.getElementById("reset-button"); // no reset button in current markup; safe no-op
 
     if (resetButton) {
         resetButton.addEventListener("click", handleReset);
