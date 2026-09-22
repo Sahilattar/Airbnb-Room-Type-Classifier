@@ -24,7 +24,7 @@ const LINE_COLORS = {
   "Shared room": "var(--line-orange)",
 };
 
-const DEFAULT_API_BASE = "http://127.0.0.1:8000";
+const DEFAULT_API_BASE = "https://airbnb-room-type-classifier.onrender.com";
 const API_BASE_KEY = "nyc-classifier:apiBase";
 
 function getApiBase() {
