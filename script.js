@@ -9,7 +9,7 @@ const API_BASE_KEY = "nyc-classifier:apiBase";
 
 function getApiBase() {
     return (localStorage.getItem(API_BASE_KEY) || DEFAULT_API_BASE)
-        .replace(/\/+$/, "");
+        .replace(/\/+$/, ""); 
 }
 
 function setApiBase(value) {
