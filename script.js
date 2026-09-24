@@ -251,7 +251,7 @@ const NEIGHBOURHOODS_BY_GROUP = {
 // ============================================================
 
 const LINE_COLORS = {
-    "Entire home/apt": "--accent",
+    "Entire home/apt": "--brooklyn",
     "Private room": "--manhattan",
     "Shared room": "--queens"
 };
@@ -328,7 +328,7 @@ function populateStaticOptions() {
 
     if (boroughSelect) {
         boroughSelect.innerHTML =
-            '<option value="">Select borough</option>';
+            '<option value="" disabled selected>Select a borough</option>';
 
         Object.keys(NEIGHBOURHOODS_BY_GROUP).forEach((borough) => {
             const option = document.createElement("option");
@@ -551,10 +551,16 @@ async function handleSubmit(event) {
 
     const submitButton =
         form.querySelector('button[type="submit"]');
+    const btnText = submitButton ? submitButton.querySelector(".btn-text") : null;
 
     if (submitButton) {
+        submitButton.classList.add("loading");
         submitButton.disabled = true;
-        submitButton.textContent = "Predicting...";
+        if (btnText) {
+            btnText.textContent = "Predicting…";
+        } else {
+            submitButton.textContent = "Predicting…";
+        }
     }
 
     try {
@@ -612,8 +618,13 @@ async function handleSubmit(event) {
 
     } finally {
         if (submitButton) {
+            submitButton.classList.remove("loading");
             submitButton.disabled = false;
-            submitButton.textContent = "Predict Room Type";
+            if (btnText) {
+                btnText.textContent = "Predict Room Type";
+            } else {
+                submitButton.textContent = "Predict Room Type";
+            }
         }
     }
 }
@@ -661,12 +672,81 @@ function initSettingsPanel() {
         showError("API URL saved successfully.");
 
         setTimeout(() => {
-            const error = document.getElementById("error");
+            const error = document.getElementById("formError");
 
             if (error) {
                 error.hidden = true;
             }
         }, 2000);
+    });
+}
+
+
+// ============================================================
+// INTERACTIVE NYC SKYLINE
+// ============================================================
+
+function initInteractiveSkyline() {
+    const skyline = document.getElementById("skylineSection");
+    if (!skyline) return;
+
+    const hint = document.getElementById("skylineHint");
+    const defaultHint = "Click buildings to toggle lights";
+    const buildings = skyline.querySelectorAll(".building");
+
+    buildings.forEach((building) => {
+        const name = building.getAttribute("data-name") || "NYC Building";
+
+        building.addEventListener("mouseenter", () => {
+            if (hint) {
+                hint.textContent = name;
+                hint.style.color = "#38bdf8";
+            }
+        });
+
+        building.addEventListener("mouseleave", () => {
+            if (hint) {
+                hint.textContent = defaultHint;
+                hint.style.color = "";
+            }
+        });
+
+        const toggleBuildingLights = () => {
+            const windows = building.querySelectorAll(".win");
+            if (!windows.length) return;
+
+            const onCount = building.querySelectorAll(".win.on").length;
+            const turnOn = onCount < windows.length / 2;
+
+            windows.forEach((win, index) => {
+                setTimeout(() => {
+                    if (turnOn) {
+                        win.classList.add("on");
+                    } else {
+                        win.classList.remove("on");
+                    }
+                }, index * 25);
+            });
+
+            if (hint) {
+                hint.textContent = `${name}: Lights ${turnOn ? "on" : "dimmed"}`;
+                setTimeout(() => {
+                    if (hint.textContent.includes(name)) {
+                        hint.textContent = defaultHint;
+                        hint.style.color = "";
+                    }
+                }, 1600);
+            }
+        };
+
+        building.addEventListener("click", toggleBuildingLights);
+
+        building.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggleBuildingLights();
+            }
+        });
     });
 }
 
@@ -692,6 +772,7 @@ function init() {
     }
 
     initSettingsPanel();
+    initInteractiveSkyline();
 
     showIdle();
 }

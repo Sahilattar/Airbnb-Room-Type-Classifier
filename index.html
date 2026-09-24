@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NYC Stay Classifier — Room Type Predictor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -16,20 +19,203 @@
       <div class="mark">NYC</div>
       <h1>Stay<br>Classifier</h1>
       <p class="rail-copy">
-        Enter a listing's details and the model predicts whether it lists
+        Enter a listing's details to predict whether it is listed
         as an entire home, a private room, or a shared room — trained on
-        NYC Airbnb listing data.
+        NYC Airbnb market data.
       </p>
     </div>
 
-    <div class="borough-key">
-      <span class="key-label">Boroughs</span>
-      <ul id="boroughKey" class="key-list"><!-- filled by JS --></ul>
-    </div>
+    <!-- Skyline: Interactive NYC Architecture -->
+    <div class="skyline-wrapper" id="skylineSection" aria-label="Interactive NYC Skyline">
+      <div class="skyline-header">
+        <span class="skyline-title">NYC Skyline</span>
+        <span class="skyline-hint" id="skylineHint">Click buildings to toggle lights</span>
+      </div>
+      <div class="skyline-canvas">
+        <svg class="skyline-svg" viewBox="0 0 300 170" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Sky ambiance / Stars -->
+          <circle cx="25" cy="20" r="1" class="star" />
+          <circle cx="95" cy="15" r="1.2" class="star star-delay-1" />
+          <circle cx="180" cy="18" r="0.9" class="star star-delay-2" />
+          <circle cx="280" cy="24" r="1.1" class="star star-delay-3" />
 
-    <div class="rail-bottom">
-      <span class="endpoint-label">API endpoint</span>
-      <span class="endpoint-hint">Set in <code>script.js</code> as <code>API_URL</code></span>
+          <!-- Building 1: One World Trade / Spire Tower -->
+          <g class="building" data-name="One World Trade" tabindex="0">
+            <!-- Spire & Beacon -->
+            <line x1="60" y1="20" x2="60" y2="40" stroke="#64748b" stroke-width="1.5" />
+            <circle cx="60" cy="19" r="2.5" class="beacon beacon-red" />
+            <!-- Structure -->
+            <polygon points="40,170 40,75 60,40 80,75 80,170" class="bldg-body bldg-back" />
+            <!-- Windows -->
+            <g class="windows">
+              <rect x="52" y="70" width="3" height="4" class="win win-blue on" />
+              <rect x="65" y="70" width="3" height="4" class="win win-gold on" />
+              <rect x="48" y="85" width="3" height="4" class="win win-gold" />
+              <rect x="68" y="85" width="3" height="4" class="win win-blue on" />
+              <rect x="52" y="100" width="3" height="4" class="win win-blue" />
+              <rect x="65" y="100" width="3" height="4" class="win win-gold on" />
+              <rect x="48" y="115" width="3" height="4" class="win win-gold on" />
+              <rect x="68" y="115" width="3" height="4" class="win win-blue" />
+              <rect x="52" y="130" width="3" height="4" class="win win-blue on" />
+              <rect x="65" y="130" width="3" height="4" class="win win-gold on" />
+            </g>
+          </g>
+
+          <!-- Building 2: Empire State Inspired Tower -->
+          <g class="building" data-name="Empire State Tower" tabindex="0">
+            <!-- Spire & Beacon -->
+            <line x1="150" y1="12" x2="150" y2="28" stroke="#94a3b8" stroke-width="1.5" />
+            <circle cx="150" cy="11" r="2.5" class="beacon beacon-white" />
+            <!-- Spire crown tiers -->
+            <rect x="146" y="28" width="8" height="14" class="bldg-body bldg-mid" />
+            <rect x="142" y="42" width="16" height="20" class="bldg-body bldg-mid" />
+            <rect x="138" y="62" width="24" height="20" class="bldg-body bldg-mid" />
+            <!-- Main tower body -->
+            <rect x="132" y="82" width="36" height="88" class="bldg-body bldg-mid" />
+            <!-- Windows -->
+            <g class="windows">
+              <rect x="145" y="48" width="3" height="4" class="win win-gold on" />
+              <rect x="152" y="48" width="3" height="4" class="win win-blue on" />
+              <rect x="142" y="68" width="3" height="4" class="win win-blue on" />
+              <rect x="155" y="68" width="3" height="4" class="win win-gold" />
+              <rect x="137" y="90" width="3" height="4" class="win win-gold on" />
+              <rect x="144" y="90" width="3" height="4" class="win win-blue on" />
+              <rect x="153" y="90" width="3" height="4" class="win win-blue" />
+              <rect x="160" y="90" width="3" height="4" class="win win-gold on" />
+              <rect x="137" y="105" width="3" height="4" class="win win-blue" />
+              <rect x="144" y="105" width="3" height="4" class="win win-gold on" />
+              <rect x="153" y="105" width="3" height="4" class="win win-gold on" />
+              <rect x="160" y="105" width="3" height="4" class="win win-blue on" />
+              <rect x="137" y="120" width="3" height="4" class="win win-gold on" />
+              <rect x="144" y="120" width="3" height="4" class="win win-blue" />
+              <rect x="153" y="120" width="3" height="4" class="win win-gold on" />
+              <rect x="160" y="120" width="3" height="4" class="win win-blue on" />
+              <rect x="137" y="135" width="3" height="4" class="win win-blue on" />
+              <rect x="144" y="135" width="3" height="4" class="win win-gold on" />
+              <rect x="153" y="135" width="3" height="4" class="win win-blue on" />
+              <rect x="160" y="135" width="3" height="4" class="win win-gold" />
+            </g>
+          </g>
+
+          <!-- Building 3: Art Deco / Chrysler Style Tower -->
+          <g class="building" data-name="Chrysler Spire" tabindex="0">
+            <line x1="225" y1="22" x2="225" y2="38" stroke="#64748b" stroke-width="1.5" />
+            <circle cx="225" cy="21" r="2.5" class="beacon beacon-red" />
+            <!-- Arched deco crown -->
+            <polygon points="220,38 230,38 227,30 223,30" class="bldg-body bldg-back" />
+            <polygon points="216,48 234,48 231,38 219,38" class="bldg-body bldg-back" />
+            <polygon points="212,60 238,60 235,48 215,48" class="bldg-body bldg-back" />
+            <!-- Body -->
+            <rect x="210" y="60" width="30" height="110" class="bldg-body bldg-back" />
+            <!-- Windows -->
+            <g class="windows">
+              <rect x="216" y="68" width="3" height="4" class="win win-gold on" />
+              <rect x="223" y="68" width="3" height="4" class="win win-blue on" />
+              <rect x="230" y="68" width="3" height="4" class="win win-gold" />
+              <rect x="216" y="84" width="3" height="4" class="win win-blue on" />
+              <rect x="223" y="84" width="3" height="4" class="win win-gold on" />
+              <rect x="230" y="84" width="3" height="4" class="win win-blue" />
+              <rect x="216" y="100" width="3" height="4" class="win win-gold" />
+              <rect x="223" y="100" width="3" height="4" class="win win-gold on" />
+              <rect x="230" y="100" width="3" height="4" class="win win-blue on" />
+              <rect x="216" y="116" width="3" height="4" class="win win-blue on" />
+              <rect x="223" y="116" width="3" height="4" class="win win-gold on" />
+              <rect x="230" y="116" width="3" height="4" class="win win-gold on" />
+              <rect x="216" y="132" width="3" height="4" class="win win-gold on" />
+              <rect x="223" y="132" width="3" height="4" class="win win-blue on" />
+              <rect x="230" y="132" width="3" height="4" class="win win-gold" />
+            </g>
+          </g>
+
+          <!-- Foreground Building 4: Brooklyn Brownstone with Water Tower -->
+          <g class="building" data-name="Brooklyn Brownstone" tabindex="0">
+            <!-- Classic Rooftop Water Tank -->
+            <rect x="18" y="90" width="14" height="12" rx="1" fill="#78350f" stroke="#b45309" stroke-width="0.8" />
+            <polygon points="17,90 25,83 33,90" fill="#92400e" />
+            <line x1="20" y1="102" x2="20" y2="108" stroke="#475569" stroke-width="1.2" />
+            <line x1="30" y1="102" x2="30" y2="108" stroke="#475569" stroke-width="1.2" />
+            <!-- Brownstone Body -->
+            <rect x="6" y="108" width="38" height="62" class="bldg-body bldg-front" />
+            <!-- Decorative cornice -->
+            <rect x="4" y="106" width="42" height="3" fill="#334155" />
+            <!-- Windows & Door -->
+            <g class="windows">
+              <rect x="12" y="115" width="4" height="6" rx="0.5" class="win win-gold on" />
+              <rect x="22" y="115" width="4" height="6" rx="0.5" class="win win-gold on" />
+              <rect x="32" y="115" width="4" height="6" rx="0.5" class="win win-gold" />
+              <rect x="12" y="128" width="4" height="6" rx="0.5" class="win win-gold on" />
+              <rect x="22" y="128" width="4" height="6" rx="0.5" class="win win-gold" />
+              <rect x="32" y="128" width="4" height="6" rx="0.5" class="win win-gold on" />
+              <rect x="12" y="142" width="4" height="6" rx="0.5" class="win win-gold on" />
+              <rect x="22" y="142" width="4" height="6" rx="0.5" class="win win-gold on" />
+              <rect x="32" y="142" width="4" height="6" rx="0.5" class="win win-gold" />
+              <!-- Stoop door -->
+              <rect x="21" y="156" width="6" height="14" rx="0.5" class="win win-amber on" />
+            </g>
+          </g>
+
+          <!-- Foreground Building 5: Midtown Modern Glass Tower -->
+          <g class="building" data-name="Midtown Plaza" tabindex="0">
+            <rect x="86" y="98" width="40" height="72" class="bldg-body bldg-front" />
+            <line x1="86" y1="98" x2="126" y2="98" stroke="#475569" stroke-width="1.5" />
+            <g class="windows">
+              <rect x="92" y="106" width="6" height="5" class="win win-blue on" />
+              <rect x="103" y="106" width="6" height="5" class="win win-blue on" />
+              <rect x="114" y="106" width="6" height="5" class="win win-gold on" />
+              <rect x="92" y="118" width="6" height="5" class="win win-blue" />
+              <rect x="103" y="118" width="6" height="5" class="win win-gold on" />
+              <rect x="114" y="118" width="6" height="5" class="win win-blue on" />
+              <rect x="92" y="130" width="6" height="5" class="win win-gold on" />
+              <rect x="103" y="130" width="6" height="5" class="win win-blue on" />
+              <rect x="114" y="130" width="6" height="5" class="win win-gold on" />
+              <rect x="92" y="142" width="6" height="5" class="win win-blue on" />
+              <rect x="103" y="142" width="6" height="5" class="win win-blue" />
+              <rect x="114" y="142" width="6" height="5" class="win win-blue on" />
+            </g>
+          </g>
+
+          <!-- Foreground Building 6: Flatiron / Chelsea Residence -->
+          <g class="building" data-name="Chelsea Lofts" tabindex="0">
+            <rect x="174" y="108" width="32" height="62" class="bldg-body bldg-front" />
+            <g class="windows">
+              <rect x="180" y="116" width="5" height="5" class="win win-gold on" />
+              <rect x="192" y="116" width="5" height="5" class="win win-gold on" />
+              <rect x="180" y="128" width="5" height="5" class="win win-blue on" />
+              <rect x="192" y="128" width="5" height="5" class="win win-gold" />
+              <rect x="180" y="140" width="5" height="5" class="win win-gold on" />
+              <rect x="192" y="140" width="5" height="5" class="win win-blue on" />
+              <rect x="180" y="152" width="5" height="5" class="win win-gold on" />
+              <rect x="192" y="152" width="5" height="5" class="win win-gold on" />
+            </g>
+          </g>
+
+          <!-- Foreground Building 7: East River Tower -->
+          <g class="building" data-name="East River Residence" tabindex="0">
+            <rect x="246" y="96" width="48" height="74" class="bldg-body bldg-front" />
+            <g class="windows">
+              <rect x="254" y="105" width="4" height="5" class="win win-gold on" />
+              <rect x="264" y="105" width="4" height="5" class="win win-blue on" />
+              <rect x="274" y="105" width="4" height="5" class="win win-gold on" />
+              <rect x="284" y="105" width="4" height="5" class="win win-blue" />
+              <rect x="254" y="118" width="4" height="5" class="win win-gold on" />
+              <rect x="264" y="118" width="4" height="5" class="win win-gold" />
+              <rect x="274" y="118" width="4" height="5" class="win win-blue on" />
+              <rect x="284" y="118" width="4" height="5" class="win win-gold on" />
+              <rect x="254" y="132" width="4" height="5" class="win win-blue on" />
+              <rect x="264" y="132" width="4" height="5" class="win win-gold on" />
+              <rect x="274" y="132" width="4" height="5" class="win win-gold on" />
+              <rect x="284" y="132" width="4" height="5" class="win win-blue on" />
+              <rect x="254" y="146" width="4" height="5" class="win win-gold on" />
+              <rect x="264" y="146" width="4" height="5" class="win win-blue on" />
+              <rect x="274" y="146" width="4" height="5" class="win win-gold" />
+              <rect x="284" y="146" width="4" height="5" class="win win-gold on" />
+            </g>
+          </g>
+
+          <!-- Street level baseline -->
+          <line x1="0" y1="170" x2="300" y2="170" stroke="rgba(255, 255, 255, 0.15)" stroke-width="2" />
+        </svg>
+      </div>
     </div>
   </aside>
 
@@ -39,8 +225,8 @@
     <form id="predictForm" class="card" autocomplete="off">
 
       <div class="card-head">
-        <h2>Listing details</h2>
-        <span class="card-head-sub">10 fields</span>
+        <h2>Listing Details</h2>
+        <span class="card-head-sub">10 Required Fields</span>
       </div>
 
       <div class="grid">
@@ -48,62 +234,62 @@
         <div class="field">
           <label for="latitude">Latitude</label>
           <input id="latitude" name="latitude" type="number" step="any"
-                 min="-90" max="90" placeholder="40.7128" required>
+                 min="-90" max="90" placeholder="e.g. 40.7128" required>
         </div>
 
         <div class="field">
           <label for="longitude">Longitude</label>
           <input id="longitude" name="longitude" type="number" step="any"
-                 min="-180" max="180" placeholder="-74.0060" required>
+                 min="-180" max="180" placeholder="e.g. -74.0060" required>
         </div>
 
         <div class="field">
-          <label for="price">Price / night ($)</label>
+          <label for="price">Price / Night ($)</label>
           <input id="price" name="price" type="number" step="any"
-                 min="0.01" placeholder="150" required>
+                 min="0.01" placeholder="e.g. 150" required>
         </div>
 
         <div class="field">
-          <label for="minimum_nights">Minimum nights</label>
+          <label for="minimum_nights">Minimum Nights</label>
           <input id="minimum_nights" name="minimum_nights" type="number" step="1"
-                 min="1" max="365" placeholder="3" required>
+                 min="1" max="365" placeholder="e.g. 3" required>
         </div>
 
         <div class="field">
-          <label for="number_of_reviews">Number of reviews</label>
+          <label for="number_of_reviews">Number of Reviews</label>
           <input id="number_of_reviews" name="number_of_reviews" type="number" step="1"
-                 min="0" placeholder="24" required>
+                 min="0" placeholder="e.g. 24" required>
         </div>
 
         <div class="field">
-          <label for="reviews_per_month">Reviews per month</label>
+          <label for="reviews_per_month">Reviews per Month</label>
           <input id="reviews_per_month" name="reviews_per_month" type="number" step="any"
-                 min="0" placeholder="1.2" required>
+                 min="0" placeholder="e.g. 1.2" required>
         </div>
 
         <div class="field">
-          <label for="calculated_host_listings_count">Host's total listings</label>
+          <label for="calculated_host_listings_count">Host's Total Listings</label>
           <input id="calculated_host_listings_count" name="calculated_host_listings_count"
-                 type="number" step="1" min="0" placeholder="2" required>
+                 type="number" step="1" min="0" placeholder="e.g. 2" required>
         </div>
 
         <div class="field">
-          <label for="availability_365">Available days / year</label>
+          <label for="availability_365">Available Days / Year</label>
           <input id="availability_365" name="availability_365" type="number" step="1"
-                 min="0" max="365" placeholder="180" required>
+                 min="0" max="365" placeholder="e.g. 180" required>
         </div>
 
         <div class="field">
           <label for="neighbourhood_group">Borough</label>
           <select id="neighbourhood_group" name="neighbourhood_group" required>
-            <option value="" disabled selected>Choose a borough</option>
+            <option value="" disabled selected>Select a borough</option>
           </select>
         </div>
 
         <div class="field">
-          <label for="neighbourhood">Neighbourhood</label>
+          <label for="neighbourhood">Neighborhood</label>
           <input id="neighbourhood" name="neighbourhood" type="text"
-                 list="neighbourhoodList" placeholder="Start typing…" required>
+                 list="neighbourhoodList" placeholder="e.g. Williamsburg, Midtown…" required>
           <datalist id="neighbourhoodList"></datalist>
         </div>
 
@@ -111,7 +297,7 @@
 
       <div class="card-foot">
         <button type="submit" id="submitBtn" class="btn-predict">
-          <span class="btn-text">Predict room type</span>
+          <span class="btn-text">Predict Room Type</span>
           <span class="btn-spinner" aria-hidden="true"></span>
         </button>
         <span id="formError" class="form-error" role="alert"></span>
@@ -120,7 +306,7 @@
 
     <section id="result" class="result" hidden>
       <div class="result-head">
-        <span class="result-label">Prediction</span>
+        <span class="result-label">Model Prediction</span>
         <h2 id="resultType">—</h2>
       </div>
       <div id="probBars" class="prob-bars"><!-- filled by JS --></div>
